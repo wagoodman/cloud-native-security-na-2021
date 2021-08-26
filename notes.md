@@ -1,6 +1,0 @@
-- can we put content in whiteout files?
-    - yes, it can get imported and used locally
-    - it cannot be saved back out for extraction (without much difficulty)
-    - it cannot be pushed up to dockerhub
-- combining with non-distributable layers for just-in-time injection of material?
-- store payload content as extended attribute values across multiple files

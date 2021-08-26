@@ -1,1 +1,5 @@
 *.tar
+*.tar*
+original-build-iid
+.idea/
+.vscode/
