@@ -1,0 +1,73 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-and-validate
+spec:
+  workspaces:
+    - name: shared-data
+
+  params:
+    - name: git-repo-url
+      type: string
+      default: https://github.com/wagoodman/dummy-project
+    - name: image-name
+      type: string
+      default: ghcr.io/wagoodman/dummy-project
+    - name: commit
+      type: string
+      default: e68a80446ec8c3b220a39efeafc72e73c39177e2
+    - name: dockerfile-path
+      type: string
+      default: 'Dockerfile'
+
+  tasks:
+    - name: generate-build-id
+      taskRef:
+        name: generate-build-id
+      params:
+        - name: base-version
+          value: $(params.commit)
+
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      runAfter:
+        - generate-build-id
+      workspaces:
+        - name: output
+          workspace: shared-data
+      params:
+        - name: url
+          value: $(params.git-repo-url)
+        - name: revision
+          value: main
+        - name: sslVerify
+          value: 'false'
+        - name: deleteExisting
+          value: 'true'
+        - name: subdirectory
+          value: build-$(tasks.generate-build-id.results.build-id)
+
+    - name: build
+      taskRef:
+        name: kaniko
+        kind: Task
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: shared-data
+      params:
+      - name: IMAGE
+        value: $(params.image-name):$(params.commit)
+      - name: CONTEXT
+        value: build-$(tasks.generate-build-id.results.build-id)
+      - name: DOCKERFILE
+        value: $(params.dockerfile-path)
+      - name: EXTRA_ARGS
+        value:
+          - '--reproducible'
+          - '--label'
+          - 'build=$(tasks.generate-build-id.results.build-id)'
+          - '--verbosity=debug'
+          - '--no-push'
