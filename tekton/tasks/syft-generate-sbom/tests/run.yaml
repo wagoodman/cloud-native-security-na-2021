@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: syft-generate-sbom
+  namespace: default
+spec:
+  params:
+    - name: image
+      value: 'alpine:latest'
+
+  workspaces:
+    - name: output
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+
+  taskRef:
+    name: syft-generate-sbom
+    kind: Task

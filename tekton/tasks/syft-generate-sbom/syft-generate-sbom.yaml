@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: syft-generate-sbom
+
+spec:
+  description: >-
+    Generate an SBOM from a container image
+  params:
+  # - name: SCHEME
+  #   description: The input scheme to use (leave empty to automatically detect)
+  #   default: ""
+  - name: image
+    description: Name (reference) of the image to build.
+  - name: output-format
+    description: The SBOM format to use (json, spdx, spdx-json, cyclonedx)
+    default: json
+  - name: syft-image
+    description: The syft image to use to generate the SBOM
+    # default: 'docker.io/anchore/syft:v0.21'
+    default: 'ghcr.io/wagoodman/syft:dev'
+  - name: extra-args
+    type: array
+    default: []
+
+  workspaces:
+  - name: image-content
+    optional: true
+  - name: output
+
+  steps:
+  - name: generate-sbom
+    image: $(params.syft-image)
+    command:
+    - /syft
+    - $(params.extra-args[*])
+    - -vv
+    - $(params.image)
+    - -o$(params.output-format)
+    - -f$(workspaces.output.path)/sbom.$(params.output-format)

@@ -16,11 +16,3 @@ export -f install_refs
 
 # install any tasks from references
 find . -name '*-refs.yaml' | xargs -I {} bash -c 'install_refs "{}"'
-
-# install all tasks defined locally
-for DIR in */ ; do
-    if [ -d "$DIR" ]; then
-        echo "● installing custom task $(basename $DIR)"
-        kubectl apply -f ${DIR}/*.yaml
-    fi
-done
