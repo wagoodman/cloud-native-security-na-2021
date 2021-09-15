@@ -7,9 +7,6 @@ spec:
   description: >-
     Generate an SBOM from a container image
   params:
-  # - name: SCHEME
-  #   description: The input scheme to use (leave empty to automatically detect)
-  #   default: ""
   - name: image
     description: Name (reference) of the image to build.
   - name: output-format
@@ -28,6 +25,10 @@ spec:
     optional: true
   - name: output
 
+  results:
+    - name: sbom-filename
+      description: The name of the SBOM file generated in the output workspace
+
   steps:
   - name: generate-sbom
     image: $(params.syft-image)
@@ -36,5 +37,49 @@ spec:
     - $(params.extra-args[*])
     - -vv
     - $(params.image)
-    - -o$(params.output-format)
+    # - -o$(params.output-format)
     - -f$(workspaces.output.path)/sbom.$(params.output-format)
+
+  - name: create-sbom-cr
+    image: python:slim
+    env:
+      - name: INPUT_FILE
+        value: '$(workspaces.output.path)/sbom.$(params.output-format)'
+      - name: OUTPUT_FILE
+        value: '$(workspaces.output.path)/sbom.cr.json'
+    script: |
+      #!/usr/bin/env python
+      import json
+      import os
+
+      with open(os.environ["INPUT_FILE"]) as f:
+          sbom = json.load(f)
+
+      doc = {
+          "apiVersion": "anchore.com/v1beta1",
+          "kind": "SyftSBOM",
+          "metadata": {
+              "name": "something",
+          },
+          "spec": sbom
+      }
+
+      with open(os.environ["OUTPUT_FILE"], "w") as f:
+          json.dump(f, doc, indent=2, sort_keys=True)
+
+  - name: persist-sbom-cr
+    image: gcr.io/cloud-builders/kubectl@sha256:8ab94be8b2b4f3d117f02d868b39540fddd225447abf4014f7ba4765cb39f753 #image is huge
+    env:
+      - name: CR_FILE
+        value: '$(workspaces.output.path)/sbom.cr.json'
+    script: |
+      #!/usr/bin/env bash
+
+      kubectl apply -f $CR_FILE
+
+  # TODO: make this filename configurable?
+  - name: capture-sbom-filename
+    image: bash:latest
+    script: |
+      #!/usr/bin/env bash
+      echo -n sbom.$(params.output-format) | tee $(results.sbom-filename.path)

@@ -1,0 +1,72 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must be in the form: <spec.plural>.<group>.
+  name: syftsboms.anchore.com
+spec:
+  # group name to use for REST API: /apis/<spec.group>/<spec.version>
+  # This example a format of REST API would be: /apis/anchore.com/v1beta1
+  # apiVersion in yaml files to create this CRD type should be same with this value.
+  group: anchore.com
+  names:
+    kind: SyftSBOM
+    listKind: SyftSBOMList
+    # plural name to be used in the URL: /apis/<spec.group>/<spec.version>/<plural>
+    # This example a format of the URL would be: /apis/anchore.com/v1beta1/syftsboms
+    plural: syftsboms
+    # signalur name to be used as an alias on the CLI and for the display
+    singular: syftsbom
+  # either "Namespaced" or "Cluster" (unnamespaced object such as CRD itself).
+  # You can specify which resources in a namespace by $ kubectl api-resources --namespaced=true
+  # or not in a namespace by $ kubectl api-resources --namespaced=false.
+  scope: Namespaced
+
+  versions:
+  # this corresponds to the JSON schema (loosely): https://github.com/anchore/syft/tree/main/schema/json
+  - name: v1beta1
+    # Each version can be enabled/disabled by served flag.
+    served: true
+    # One any only one version must be marked as the storage version.
+    storage: true
+
+    # By specifying OpenAPI v3.0 validation schema, we can add some restrictions on CRD objects
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              artifactRelationships:
+                type: array
+                items:
+                  type: object
+              artifacts:
+                type: array
+                items:
+                  type: object
+              descriptor:
+                type: object
+              distro:
+                type: object
+              fileClassifications:
+                type: array
+                items:
+                  type: object
+              fileMetadata:
+                type: array
+                items:
+                  type: object
+              schema:
+                type: object
+              source:
+                type: object
+              secrets:
+                type: array
+                items:
+                  type: object
+            required:
+              - artifacts
+              - descriptor
+              - source
+              - schema

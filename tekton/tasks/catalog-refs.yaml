@@ -2,3 +2,4 @@ git-clone: https://raw.githubusercontent.com/tektoncd/catalog/master/task/git-cl
 buildid: https://raw.githubusercontent.com/tektoncd/catalog/master/task/generate-build-id/0.1/generate-build-id.yaml
 skopeo-copy: https://raw.githubusercontent.com/tektoncd/catalog/master/task/skopeo-copy/0.1/skopeo-copy.yaml
 kaniko: https://raw.githubusercontent.com/tektoncd/catalog/main/task/kaniko/0.5/kaniko.yaml
+kubernetes-actions: https://raw.githubusercontent.com/tektoncd/catalog/main/task/kubernetes-actions/0.2/kubernetes-actions.yaml
