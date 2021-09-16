@@ -21,9 +21,6 @@ spec:
     - name: dockerfile-path
       type: string
       default: 'Dockerfile'
-    - name: staged-suffix
-      type: string
-      default: 'staged'
 
   tasks:
     - name: generate-build-id
@@ -69,7 +66,7 @@ spec:
 
     # TODO: hadolint dockerfile
 
-    - name: build-and-push-to-staging
+    - name: build-image
       taskRef:
         name: kaniko
         kind: Task
@@ -81,7 +78,7 @@ spec:
           workspace: share
       params:
       - name: IMAGE
-        value: $(params.image-name):git-$(params.git-repo-ref)-$(params.staged-suffix)
+        value: $(params.image-name):git-$(params.git-repo-ref)
       - name: CONTEXT
         value: build-$(tasks.generate-build-id.results.build-id)
       - name: DOCKERFILE
@@ -91,16 +88,16 @@ spec:
           - '--reproducible'
           - '--label'
           - 'build=$(tasks.generate-build-id.results.build-id)'
-          # - '--verbosity=debug'
-          # - '--no-push'
+          - '--no-push'
           - '--oci-layout-path=$(workspaces.source.path)/oci-$(tasks.generate-build-id.results.build-id)'
+          # - '--verbosity=debug'
 
     - name: generate-sbom
       taskRef:
         name: syft-generate-sbom
         kind: Task
       runAfter:
-        - build-and-push-to-staging
+        - build-image
       workspaces:
         - name: image-content
           workspace: share
@@ -108,9 +105,7 @@ spec:
           workspace: share
       params:
       - name: image
-        value: $(params.image-name):git-$(params.git-repo-ref)-$(params.staged-suffix)
-      - name: image-path
-        value: $(workspaces.image-content.path)/oci-$(tasks.generate-build-id.results.build-id)
+        value: oci-dir:$(workspaces.image-content.path)/oci-$(tasks.generate-build-id.results.build-id)
       - name: extra-args
         value:
           - "power-user"
@@ -132,7 +127,7 @@ spec:
           workspace: share
       params:
       - name: input
-        value: 'sbom:$(workspaces.scan-target.path)/$(tasks.generate-sbom.results.sbom-filename)'
+        value: sbom:$(workspaces.scan-target.path)/$(tasks.generate-sbom.results.sbom-filename)
       # TODO: add threshold for later
       # - name: extra-args
       #   value:
@@ -143,7 +138,7 @@ spec:
 
     # TODO: extra quality gating (jq vulnerability-scan.json)
 
-    - name: promote-tag
+    - name: publish-image
       taskRef:
         name: skopeo-copy
         kind: Task
@@ -155,6 +150,21 @@ spec:
           workspace: share
       params:
       - name: srcImageURL
-        value: 'docker://$(params.image-name):git-$(params.git-repo-ref)-$(params.staged-suffix)'
+        value: 'oci:$(workspaces.images-url.path)/oci-$(tasks.generate-build-id.results.build-id)'
       - name: destImageURL
         value: 'docker://$(params.image-name):git-$(params.git-repo-ref)'
+
+    - name: publish-sbom
+      taskRef:
+        name: cosign-attach-sbom
+        kind: Task
+      runAfter:
+        - publish-image
+      workspaces:
+        - name: input
+          workspace: share
+      params:
+      - name: image
+        value: docker://$(params.image-name):git-$(params.git-repo-ref)
+      - name: sbom-filename
+        value: $(tasks.generate-sbom.results.sbom-filename)
