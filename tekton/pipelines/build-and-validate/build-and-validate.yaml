@@ -165,6 +165,6 @@ spec:
           workspace: share
       params:
       - name: image
-        value: docker://$(params.image-name):git-$(params.git-repo-ref)
+        value: $(params.image-name):git-$(params.git-repo-ref)
       - name: sbom-filename
         value: $(tasks.generate-sbom.results.sbom-filename)
