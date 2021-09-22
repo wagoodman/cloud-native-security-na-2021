@@ -5,7 +5,7 @@ run:
 		--serviceaccount=build-bot
 
 .PHONY: install
-install: install-service-account install-fake-secret install-crds install-tasks install-pipelines
+install: enable-feature-flags install-service-account install-fake-secret install-crds install-tasks install-pipelines
 
 .PHONY: install-tasks
 install-tasks: install-external-tasks install-local-tasks
@@ -16,6 +16,10 @@ install-fake-secret:
 	@kubectl create secret generic asset-token \
 	--from-literal=username=devuser \
 	--from-literal=token='fake-token-value' || true
+
+.PHONY: enable-feature-flags
+enable-feature-flags:
+	./scripts/enable-feature-flags.sh
 
 .PHONY: install-service-account
 install-service-account:

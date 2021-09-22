@@ -29,3 +29,9 @@ spec:
     - $(workspaces.input.path)/$(params.sbom-filename)
     - $(params.image)
 
+  - name: helpful-callout
+    image: bash:latest
+    script: |
+      #!/usr/bin/env bash
+      echo "Download the SBOM via:"
+      echo "   cosign download sbom $(params.image)"
