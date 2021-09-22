@@ -4,6 +4,12 @@ run:
 		-w name=share,volumeClaimTemplateFile=resources/pvc.yaml \
 		--serviceaccount=build-bot
 
+.PHONY: install-tekton
+install-tekton:
+	kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/pipeline/latest/release.yaml
+	kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/dashboard/latest/tekton-dashboard-release.yaml
+
+
 .PHONY: install
 install: install-image-cache-pvc install-service-account install-fake-secret install-crds install-tasks install-pipelines
 
