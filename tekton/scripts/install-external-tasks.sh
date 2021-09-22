@@ -7,8 +7,8 @@ trap popd EXIT
 install_refs() {
     echo "● installing task references from $1"
     while IFS= read -r LINE; do
-        IFS=":" read NAME URL <<< "$LINE"
-        kubectl apply -f $URL
+        IFS=":" read NAME VERSION <<< "$LINE"
+        tkn hub reinstall task $NAME --version $VERSION 
     done < $1
 }
 

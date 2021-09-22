@@ -5,7 +5,7 @@ run:
 		--serviceaccount=build-bot
 
 .PHONY: install
-install: enable-feature-flags install-service-account install-fake-secret install-crds install-tasks install-pipelines
+install: install-image-cache-pvc install-service-account install-fake-secret install-crds install-tasks install-pipelines
 
 .PHONY: install-tasks
 install-tasks: install-external-tasks install-local-tasks
@@ -15,11 +15,15 @@ install-fake-secret:
 	# this isn't a real secret, we just need dummy data
 	@kubectl create secret generic asset-token \
 	--from-literal=username=devuser \
-	--from-literal=token='fake-token-value' || true
+	--from-literal=token='12345A7a901b345678901234567890123456789012345678901234567890' || true
 
-.PHONY: enable-feature-flags
-enable-feature-flags:
-	./scripts/enable-feature-flags.sh
+# .PHONY: enable-feature-flags
+# enable-feature-flags:
+# 	./scripts/enable-feature-flags.sh
+
+.PHONY: install-image-cache-pvc
+install-image-cache-pvc:
+	./scripts/install-image-cache-pvc.sh
 
 .PHONY: install-service-account
 install-service-account:
