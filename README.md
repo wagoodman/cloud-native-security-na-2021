@@ -30,6 +30,17 @@ This talk will focus on the various circumstances that can lead to hidden inform
 
 ## Ideas
 
+### Presentation Notes
+
+Notes:
+- -f should maybe show the report to stdout additionally?
+- where do I stash the vulnerability report?
+
+Hiding:
+- secret in plan layer
+- hidden layer has a secret
+- vulnerability in a visible file
+
 ### Hiding things in images
 
 - [ ] Extra unreferenced blob

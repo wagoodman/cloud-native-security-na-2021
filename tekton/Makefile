@@ -1,13 +1,43 @@
+RUN_PARAMS= -w name=share,volumeClaimTemplateFile=resources/pvc.yaml \
+			--serviceaccount=build-bot \
+			-p git-repo-url=https://github.com/wagoodman/dummy-project \
+			-p image-name=ghcr.io/wagoodman/dummy-project \
+			-p dockerfile-path=Dockerfile
+
 .PHONY: run
 run:
+	tkn pipeline start build-and-validate $(RUN_PARAMS) -p git-repo-ref=main
+
+.PHONY: run-all-scenarios
+run-all-scenarios:
+	# let's get an example of the app failing due to a vulnerability quality gate problem
 	tkn pipeline start build-and-validate \
-		-w name=share,volumeClaimTemplateFile=resources/pvc.yaml \
-		--serviceaccount=build-bot
+		$(RUN_PARAMS) \
+		--showlog \
+		-p git-repo-ref=1-before-remediation || true
+
+	# let's get an example of the app failing due to a secrets
+	tkn pipeline start build-and-validate \
+		$(RUN_PARAMS) \
+		--showlog
+		-p git-repo-ref=2-remediate-nltk || true
+
+	# let's get a passing build
+	tkn pipeline start build-and-validate \
+		$(RUN_PARAMS) \
+		--showlog
+		-p git-repo-ref=3-remediate-secret-leak
 
 .PHONY: install-tekton
 install-tekton:
 	kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/pipeline/latest/release.yaml
 	kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/dashboard/latest/tekton-dashboard-release.yaml
+
+
+.PHONY: uninstall-tekton
+uninstall-tekton:
+	kubectl delete --filename https://storage.googleapis.com/tekton-releases-nightly/pipeline/latest/release.yaml
+	kubectl delete --filename https://storage.googleapis.com/tekton-releases-nightly/dashboard/latest/tekton-dashboard-release.yaml
 
 
 .PHONY: install
@@ -23,6 +53,7 @@ install-fake-secret:
 	--from-literal=username=devuser \
 	--from-literal=token='12345A7a901b345678901234567890123456789012345678901234567890' || true
 
+# used for onError, which is no longer used in this demo
 # .PHONY: enable-feature-flags
 # enable-feature-flags:
 # 	./scripts/enable-feature-flags.sh
