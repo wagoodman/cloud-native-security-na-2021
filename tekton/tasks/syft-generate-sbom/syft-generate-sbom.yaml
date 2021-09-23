@@ -40,7 +40,7 @@ spec:
     # - -o$(params.output-format)
     - -f$(workspaces.output.path)/sbom.$(params.output-format)
 
-  - name: show-sbom-summary
+  - name: sbom-package-summary
     image: python:slim
     env:
       - name: REPORT_PATH

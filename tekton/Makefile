@@ -1,7 +1,7 @@
 RUN_PARAMS= -w name=share,volumeClaimTemplateFile=resources/pvc.yaml \
 			--serviceaccount=build-bot \
-			-p git-repo-url=https://github.com/wagoodman/dummy-project \
-			-p image-name=ghcr.io/wagoodman/dummy-project \
+			-p git-repo-url=https://github.com/wagoodman/count-goober \
+			-p image-name=ghcr.io/wagoodman/count-goober \
 			-p dockerfile-path=Dockerfile
 
 .PHONY: run
@@ -10,23 +10,17 @@ run:
 
 .PHONY: run-all-scenarios
 run-all-scenarios:
-	# let's get an example of the app failing due to a vulnerability quality gate problem
+	# let's get an example of the app failing due to a vulnerability quality gate + secrets problem (tag 1-before-remediation)
 	tkn pipeline start build-and-validate \
 		$(RUN_PARAMS) \
 		--showlog \
-		-p git-repo-ref=1-before-remediation || true
+		-p git-repo-ref=bfda665e81023bf46b296c9c179f8818f5dce190 || true
 
-	# let's get an example of the app failing due to a secrets
+	# let's get a passing build (tag 3-remediate-secret-leak)
 	tkn pipeline start build-and-validate \
 		$(RUN_PARAMS) \
-		--showlog
-		-p git-repo-ref=2-remediate-nltk || true
-
-	# let's get a passing build
-	tkn pipeline start build-and-validate \
-		$(RUN_PARAMS) \
-		--showlog
-		-p git-repo-ref=3-remediate-secret-leak
+		--showlog \
+		-p git-repo-ref=4f5e6e4a05a2134ffbcb6e4802c72bc301594ebe
 
 .PHONY: install-tekton
 install-tekton:
@@ -36,8 +30,8 @@ install-tekton:
 
 .PHONY: uninstall-tekton
 uninstall-tekton:
-	kubectl delete --filename https://storage.googleapis.com/tekton-releases-nightly/pipeline/latest/release.yaml
 	kubectl delete --filename https://storage.googleapis.com/tekton-releases-nightly/dashboard/latest/tekton-dashboard-release.yaml
+	kubectl delete --filename https://storage.googleapis.com/tekton-releases-nightly/pipeline/latest/release.yaml
 
 
 .PHONY: install

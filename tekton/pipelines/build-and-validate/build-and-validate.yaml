@@ -10,14 +10,10 @@ spec:
   params:
     - name: git-repo-url
       type: string
-      default: https://github.com/wagoodman/dummy-project
     - name: image-name
       type: string
-      default: ghcr.io/wagoodman/dummy-project
     - name: git-repo-ref
       type: string
-      # default: e68a80446ec8c3b220a39efeafc72e73c39177e2
-      default: small-build
     - name: dockerfile-path
       type: string
       default: 'Dockerfile'

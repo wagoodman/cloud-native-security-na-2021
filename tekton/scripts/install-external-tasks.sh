@@ -8,7 +8,13 @@ install_refs() {
     echo "● installing task references from $1"
     while IFS= read -r LINE; do
         IFS=":" read NAME VERSION <<< "$LINE"
-        tkn hub reinstall task $NAME --version $VERSION 
+
+        matching_tasks=`kubectl get task/$NAME -o name | grep $PVC | wc -l`
+        if test $matching_tasks -eq 0; then
+            tkn hub install task $NAME --version $VERSION
+        else
+            tkn hub reinstall task $NAME --version $VERSION
+        fi
     done < $1
 }
 
